@@ -1,6 +1,6 @@
 #NEXUS 
 
-Begin trees;  [Treefile saved Sun Feb  7 22:12:14 2021]
+Begin trees;  [Treefile saved Sun Feb  7 22:21:09 2021]
 [!
 >Data file = NP_000475.1.nex
 >Heuristic search settings:
@@ -28,7 +28,7 @@ Begin trees;  [Treefile saved Sun Feb  7 22:12:14 2021]
 >  Total number of rearrangements tried = 562706
 >  Score of best tree(s) found = 4570
 >  Number of trees retained = 1
->  Time used = 0.48 sec (CPU time = 0.47 sec)
+>  Time used = 1.28 sec (CPU time = 0.70 sec)
 ]
 	Translate
 		1 NP0004751,

@@ -251,8 +251,10 @@ homoAccession = homoAccession.replace('.', '')
 homoSeq = seqDict[homoAccession]
 seqLength = len(homoSeq)
 
-#################################################################################
-#Phylogenetic tree
+################################################################################
+#
+#                       convert phylogenetic tree
+#
 ################################################################################
 Phylo.convert('{}/{}_trees.nex'.format(dir, accession_full), 'nexus', '{}/{}_tree.tree'.format(dir, accession_full), 'newick')
 
@@ -264,9 +266,11 @@ tree = re.sub(r':\d.\d+', '', tree)
 #print(tree)
 tree = TreeNode.read(StringIO(tree))
 
-####################################################################
-#find set of characters given a list of taxa l and position number i
-####################################################################
+################################################################################
+#
+#     find set of characters given a list of taxa l and position number i
+#
+################################################################################
 def findSet(l, i, seqDict):
     ll = []
     for j in l:
