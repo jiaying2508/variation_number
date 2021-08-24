@@ -4,6 +4,13 @@ Characteristic Attribute Organization System (CAOS) discovers rules associated w
 The method is described in the publication:  
 Lai, J., & Sarkar, I. N. (2021). A Phylogenetic Approach to Analyze the Conservativeness of BRCA1 and BRCA2 Mutations. AMIA ... Annual Symposium proceedings. AMIA Symposium, 2020, 677–686. https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8075528/
 
+## Required python packages
+Python packages (most of which can be installed using pip) needed to run LYRUS include:
+- skbio: http://scikit-bio.org
+- numpy: https://numpy.org/install/
+- Bio: https://biopython.org/wiki/Download
+- BeautifulSoup: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-beautiful-soup
+
 ## Required external packages
 In order to run **vn.py**, please install **command line** version for:
 1. Clustal Omega: http://www.clustal.org/omega/
