@@ -28,6 +28,6 @@ $ python -g BRCA1 -s nucleotide
 
 ## Optional Parameters
 ```
--o outputDir: need to be full path
+-o output directory: need to be full path
 -a RefSeq accession
 ```
