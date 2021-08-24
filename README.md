@@ -1,6 +1,8 @@
 # Variation Number
 Characteristic Attribute Organization System (CAOS) discovers rules associated with a given phylogenetic tree. A pure (Pu) rule or character attribute (CA) is a state that exists in all elements of a clade but not the alternate clade; a private (Pr) CA is present in some members of a clade but absent in the alternate clade. A variation number (VN) is defined as the number of occurrences of a position as a CA in all the tree clades.
 
+The method is described in Lai J, Sarkar IN. A Phylogenetic Approach to Analyze the Conservativeness of BRCA1 and BRCA2 Mutations. AMIA Annu Symp Proc. 2021 Jan 25;2020:677-686. PMID: 33936442; PMCID: PMC8075528.
+
 ## Required external packages
 In order to run **vn.py**, please install **command line** version for:
 1. Clustal Omega: http://www.clustal.org/omega/
@@ -9,16 +11,15 @@ In order to run **vn.py**, please install **command line** version for:
 ## Running Instructions
 Download **vn.py**, and run use python version 3.7.4 or higher
 ```console
-$ python vn.py -g <geneName> -s <sequenceType>
+$ python vn.py -g <geneName> -s <sequenceType: nucleotide or protein>
 ```
 Example:
 ```console
-$ python -g NAT2 -s nucleotide
+$ python -g BRCA1 -s nucleotide
 ```
-Please note that the sequence type need to be either **nucleotide** or **protein**
 
 ## Optional Parameters
 ```
--o
--a
+-o outputDir
+-a RefSeq accession
 ```
