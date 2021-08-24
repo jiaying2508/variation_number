@@ -1,7 +1,7 @@
 # Variation Number
 Characteristic Attribute Organization System (CAOS) discovers rules associated with a given phylogenetic tree. A pure (Pu) rule or character attribute (CA) is a state that exists in all elements of a clade but not the alternate clade; a private (Pr) CA is present in some members of a clade but absent in the alternate clade. A variation number (VN) is defined as the number of occurrences of a position as a CA in all the tree clades.
 
-The method is described in the publication:<\br>
+The method is described in the publication:  
 Lai, J., & Sarkar, I. N. (2021). A Phylogenetic Approach to Analyze the Conservativeness of BRCA1 and BRCA2 Mutations. AMIA ... Annual Symposium proceedings. AMIA Symposium, 2020, 677–686. https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8075528/
 
 ## Required external packages
