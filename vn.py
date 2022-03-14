@@ -1,27 +1,6 @@
-#run XGBoost Classifier to predict SAV disease pathogenicity
-'''
-python vn.py gene outputDir sequenceType refseqID 
-
-python version:
-    python3.7.4 or higher
-
-args:
-    [1] gene
-    [2] outputDir fullPath
-    [3] sequence type: protein or nucleotide
-    [4] refseqID
-
-required python packages:
-    Bio
-    skbio
-    BeautifulSoup
-    numpy
-
-required external packages:
-    clustal omega
-    paup
-    
-'''
+"""
+A module for calculating variation number
+"""
 
 __author__ = "Jiaying Lai"
 __date__ = "August, 2021"
@@ -29,7 +8,6 @@ __maintainer__ = "Jiaying Lai"
 __email__ = "jiaying_lai@brown.edu"
 
 import argparse
-import sys
 import re
 import math
 import os
@@ -48,6 +26,20 @@ import time
 replace the amino acid with X if it is not among the 20 amino acid codes
 '''
 def replaceAA(sequence, seqType):
+    """
+
+    Parameters
+    ----------
+    sequence : input sequence
+        
+    seqType : nucleotide or protein
+        
+
+    Returns
+    -------
+    if the input sequence is protein sequence, replace letter not in 'ARNDCQEGHILKMFPSTWYV' with 'X'
+
+    """
     if seqType == 'nucleotide':
         return sequence
     seq = ''
@@ -62,6 +54,21 @@ def replaceAA(sequence, seqType):
 write a sequence to fasta file
 '''
 def write_fasta(file, accession, sequence):
+    """
+
+    Parameters
+    ----------
+    file : output file 
+        
+    accession : gene/protein accession number
+        
+    sequence : output sequence
+        
+
+    Returns
+    -------
+
+    """
     file.write('>{}\n'.format(accession))
     if len(sequence) <= 70:
         file.write('>{}\n'.format(sequence))
@@ -77,6 +84,21 @@ def write_fasta(file, accession, sequence):
         file.write('{}\n'.format(sequence[start:]))
 
 def writeNexus(fileName, seqDict, sequencetype):
+    """
+
+    Parameters
+    ----------
+    fileName : output file
+        
+    seqDict : dictionary where key is accession and value is sequence
+        
+    sequencetype : protein or nucleotide
+        
+
+    Returns
+    -------
+
+    """
     nexus_file = open(fileName, 'w')
     nexus_file.write('#NEXUS\n\n')
     nexus_file.write('BEGIN TAXA;\n')
@@ -105,7 +127,20 @@ def writeNexus(fileName, seqDict, sequencetype):
     nexus_file.write('\n;\nEND;')
     nexus_file.close()
 
-def getTreeCMD(nexusFileName, outputFile, dir):
+def getTreeCMD(nexusFileName, outputFile):
+    """
+
+    Parameters
+    ----------
+    nexusFileName : nexus file name
+        
+    outputFile : output file name
+        
+
+    Returns
+    -------
+
+    """
     #TREE SEARCH METHOD
     #tree search method for simultaneous analysis tree & support tests
     treeSearchMethod = 'hsearch nreps=1000 swap=tbr multrees=no'
@@ -142,6 +177,25 @@ def findSet(l, i, seqDict):
     return ll
 
 def updateVN(node, child, variation_number, seqDict, length):
+    """
+
+    Parameters
+    ----------
+    node : tree node
+        
+    child : all the child clade of the current node
+        
+    variation_number : variation number
+        
+    seqDict : sequence dictionary
+        
+    length : sequence length
+        
+
+    Returns
+    -------
+    variation_number(np.array)
+    """
 
     allClades = re.findall(r'[a-zA-Z0-9]+', str(node))
     for c in child:
@@ -156,6 +210,21 @@ def updateVN(node, child, variation_number, seqDict, length):
     return variation_number
 
 def generateVN(tree, seqDict, seqLength):
+    """
+
+    Parameters
+    ----------
+    tree : input tree
+        
+    seqDict : dictionary where key is accession and value is sequence
+        
+    seqLength : sequence length
+        
+
+    Returns
+    -------
+    calculated variation number
+    """
     variation_number = np.zeros((seqLength,), dtype=int)
     queue = []
     queue.append(tree)
@@ -174,6 +243,23 @@ def generateVN(tree, seqDict, seqLength):
     return variation_number
 
 def processVN(file, outputDir, accession_full, seqType):
+    """
+
+    Parameters
+    ----------
+    file : input file
+        
+    outputDir : output directory
+        
+    accession_full : accession number
+        
+    seqType : nucleotide or protein
+        
+
+    Returns
+    -------
+
+    """
 
     ################################################################################
     #process homologous protein sequence file
@@ -330,6 +416,23 @@ def processVN(file, outputDir, accession_full, seqType):
         pass
 
 def getFasta(geneName, outputDir, seqType, refseqID):
+    """
+
+    Parameters
+    ----------
+    geneName : gene name
+        
+    outputDir : output directory
+        
+    seqType : protein or nucleotide
+        
+    refseqID : accession number
+        
+
+    Returns
+    -------
+    accession number for homo sapiens
+    """
     print('\n# process {} refseq'.format(geneName))
     page = requests.get('https://www.ncbi.nlm.nih.gov/protein/?term={}'.format(geneName))
     geneID = ''
@@ -413,9 +516,10 @@ def getFasta(geneName, outputDir, seqType, refseqID):
             return homo_acc
     return ''
 
+
 parser = argparse.ArgumentParser(description='Calculation for the Variation Number')
 parser.add_argument('-g', '--gene', type=str, metavar='', required=True, help='Gene Name')
-parser.add_argument('-o', '--outputDir', type=str, metavar='', help='Output Directory')
+parser.add_argument('-o', '--outputDir', type=str, metavar='', help='Output Directory; full path')
 parser.add_argument('-s', '--seqType', type=str, metavar='', required=True, help='sequence type, protein or nucleotide')
 parser.add_argument('-a', '--acc', type=str, metavar='', help='refseq accession')
 
