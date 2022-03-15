@@ -264,156 +264,155 @@ def processVN(file, outputDir, accession_full, seqType):
     ################################################################################
     #process homologous protein sequence file
     ################################################################################
-    try:
-        in_file = open('{}/{}'.format(outputDir, file, 'r'))
+    
+    in_file = open('{}/{}'.format(outputDir, file, 'r'))
 
-        print('# Generating Variation Number for {}'.format(file))
+    print('# Generating Variation Number for {}'.format(file))
 
-        accession = ''
-        sequence = ''
-        fastaDict = {}
-        for line in in_file:
-            line = line.rstrip()
-            if len(line) == 0:
-                continue
+    accession = ''
+    sequence = ''
+    fastaDict = {}
+    for line in in_file:
+        line = line.rstrip()
+        if len(line) == 0:
+            continue
 
-            if '>' in line:
-                #if the first accession, initiate
-                if accession == '':
-                    accession = re.search('>([A-Za-z0-9_]+.[0-9]+)', line)
-                    accession = accession.group(0)[1:]
-                    continue
-
-                #store accession-sequence pair in fastaDict
-                sequence = replaceAA(sequence, seqType)
-                fastaDict[accession] = sequence
-                sequence = ''
+        if '>' in line:
+            #if the first accession, initiate
+            if accession == '':
                 accession = re.search('>([A-Za-z0-9_]+.[0-9]+)', line)
                 accession = accession.group(0)[1:]
-
-            else:
-                sequence = sequence + line
-
-        sequence = replaceAA(sequence, seqType)
-        fastaDict[accession] = sequence
-        in_file.close()
-
-        ################################################################################
-        #         convert the homologous sequence file into fasta format
-        ################################################################################
-        file1 = open('{}/{}.fasta'.format(outputDir, accession_full), 'w')
-        for key in fastaDict.keys():
-            write_fasta(file1, key, fastaDict[key])
-        file1.close()
-        fastaDict.clear()
-
-        ################################################################################
-        #                      run cluster omega on the fasta file
-        ################################################################################
-        os.system('clustalo -i {}/{}.fasta -o {}/{}_aligned.fasta \
-            --auto -v --force >/dev/null'.format(outputDir, accession_full, outputDir, accession_full))
-            
-        ################################################################################
-        #  read the aligned fasta file, and clean the identifier
-        ################################################################################
-        file1 = open('{}/{}_aligned.fasta'.format(outputDir, accession_full), 'r')
-        seqDict = {}
-        accession = ''
-        seq = ''
-        for line in file1:
-
-            line = line.rstrip()
-            if len(line) == 0:
                 continue
 
-            if '>' in line:
-                if len(accession) > 0:
-                    seqDict[accession] = seq
-                    seq = ''
+            #store accession-sequence pair in fastaDict
+            sequence = replaceAA(sequence, seqType)
+            fastaDict[accession] = sequence
+            sequence = ''
+            accession = re.search('>([A-Za-z0-9_]+.[0-9]+)', line)
+            accession = accession.group(0)[1:]
 
-                accession = line.replace('_', '')
-                accession = accession.replace('.', '')
-                accession = accession.replace('>', '')
+        else:
+            sequence = sequence + line
 
-            else:
-                seq = seq + line
+    sequence = replaceAA(sequence, seqType)
+    fastaDict[accession] = sequence
+    in_file.close()
 
-        seqDict[accession] = seq
-        file1.close()
+    ################################################################################
+    #         convert the homologous sequence file into fasta format
+    ################################################################################
+    file1 = open('{}/{}.fasta'.format(outputDir, accession_full), 'w')
+    for key in fastaDict.keys():
+        write_fasta(file1, key, fastaDict[key])
+    file1.close()
+    fastaDict.clear()
 
-        ################################################################################
-        #                      convert fasta to nexus file
-        ################################################################################
-        nexusFile = '{}/{}.nex'.format(outputDir, accession_full)
-        writeNexus(nexusFile, seqDict, seqType)
+    ################################################################################
+    #                      run cluster omega on the fasta file
+    ################################################################################
+    os.system('clustalo -i {}/{}.fasta -o {}/{}_aligned.fasta \
+        --auto -v --force >/dev/null'.format(outputDir, accession_full, outputDir, accession_full))
+        
+    ################################################################################
+    #  read the aligned fasta file, and clean the identifier
+    ################################################################################
+    file1 = open('{}/{}_aligned.fasta'.format(outputDir, accession_full), 'r')
+    seqDict = {}
+    accession = ''
+    seq = ''
+    for line in file1:
 
-        ################################################################################
-        #                                   run paup
-        ################################################################################
-        getTreeCMD(nexusFile, '{}/{}_getTree.cmd'.format(outputDir, accession_full), outputDir)
-        os.system('paup {}/{}_getTree.cmd >/dev/null'.format(outputDir, accession_full))
+        line = line.rstrip()
+        if len(line) == 0:
+            continue
 
-        ################################################################################
-        #                              Generate variation number
-        ################################################################################
-        with open('{}/{}_aligned.fasta'.format(outputDir,accession_full)) as f:
-            alist = [line.rstrip() for line in f]
-        seqDict = {}
-
-        accession = ''
-        seq = ''
-        for line in alist:
-            if '>' in line:
-                if accession != '':
-                    seqDict[accession] = seq
-                accession = line.replace('>', '')
-                accession = accession.replace('_', '')
-                accession = accession.replace('.', '')
+        if '>' in line:
+            if len(accession) > 0:
+                seqDict[accession] = seq
                 seq = ''
-            else:
-                seq = seq + line
-        seqDict[accession] = seq
 
-        homoAccession = accession_full
-        homoAccession = homoAccession.replace('_', '')
-        homoAccession = homoAccession.replace('.', '')
-        homoSeq = seqDict[homoAccession]
-        seqLength = len(homoSeq)
+            accession = line.replace('_', '')
+            accession = accession.replace('.', '')
+            accession = accession.replace('>', '')
 
-        ################################################################################
-        #                       convert phylogenetic tree
-        ################################################################################
-        Phylo.convert('{}/{}_trees.nex'.format(outputDir, accession_full), 'nexus', '{}/{}_tree.tree'.format(outputDir, accession_full), 'newick')
+        else:
+            seq = seq + line
 
-        f = open('{}/{}_tree.tree'.format(outputDir, accession_full), 'r')
-        tree = f.readline()
+    seqDict[accession] = seq
+    file1.close()
 
-        tree = re.sub(r':\d.\d+', '', tree)
-        tree = TreeNode.read(StringIO(tree))
+    ################################################################################
+    #                      convert fasta to nexus file
+    ################################################################################
+    nexusFile = '{}/{}.nex'.format(outputDir, accession_full)
+    writeNexus(nexusFile, seqDict, seqType)
 
-        variation_number = generateVN(tree, seqDict, seqLength)
+    ################################################################################
+    #                                   run paup
+    ################################################################################
+    getTreeCMD(nexusFile, '{}/{}_getTree.cmd'.format(outputDir, accession_full))
+    os.system('paup {}/{}_getTree.cmd >/dev/null'.format(outputDir, accession_full))
 
-        homoIndexList = []
-        f_vn = []
-        for i in range(len(homoSeq)):
-            if str(homoSeq[i]) != '-':
-                homoIndexList.append(i)
-                f_vn.append(variation_number[i])
+    ################################################################################
+    #                              Generate variation number
+    ################################################################################
+    with open('{}/{}_aligned.fasta'.format(outputDir,accession_full)) as f:
+        alist = [line.rstrip() for line in f]
+    seqDict = {}
 
-        outputFile = open("{}/vn_{}.txt".format(outputDir,accession_full), 'w')
+    accession = ''
+    seq = ''
+    for line in alist:
+        if '>' in line:
+            if accession != '':
+                seqDict[accession] = seq
+            accession = line.replace('>', '')
+            accession = accession.replace('_', '')
+            accession = accession.replace('.', '')
+            seq = ''
+        else:
+            seq = seq + line
+    seqDict[accession] = seq
 
-        vn_max = max(f_vn)
-        vn_min = min(f_vn)
+    homoAccession = accession_full
+    homoAccession = homoAccession.replace('_', '')
+    homoAccession = homoAccession.replace('.', '')
+    homoSeq = seqDict[homoAccession]
+    seqLength = len(homoSeq)
 
-        for i in range(len(homoIndexList)):
-            j = i + 1
-            vn = variation_number[homoIndexList[i]]
-            vn = (vn - vn_min) / (vn_max - vn_min)
-            outputFile.write('{}\t{}\t{}\n'.format(str(j), homoSeq[homoIndexList[i]], str(vn)))
+    ################################################################################
+    #                       convert phylogenetic tree
+    ################################################################################
+    Phylo.convert('{}/{}_trees.nex'.format(outputDir, accession_full), 'nexus', '{}/{}_tree.tree'.format(outputDir, accession_full), 'newick')
 
-        outputFile.close()
-    except:
-        pass
+    f = open('{}/{}_tree.tree'.format(outputDir, accession_full), 'r')
+    tree = f.readline()
+
+    tree = re.sub(r':\d.\d+', '', tree)
+    tree = TreeNode.read(StringIO(tree))
+
+    variation_number = generateVN(tree, seqDict, seqLength)
+
+    homoIndexList = []
+    f_vn = []
+    for i in range(len(homoSeq)):
+        if str(homoSeq[i]) != '-':
+            homoIndexList.append(i)
+            f_vn.append(variation_number[i])
+
+    outputFile = open("{}/vn_{}.txt".format(outputDir,accession_full), 'w')
+
+    vn_max = max(f_vn)
+    vn_min = min(f_vn)
+
+    for i in range(len(homoIndexList)):
+        j = i + 1
+        vn = variation_number[homoIndexList[i]]
+        vn = (vn - vn_min) / (vn_max - vn_min)
+        outputFile.write('{}\t{}\t{}\n'.format(str(j), homoSeq[homoIndexList[i]], str(vn)))
+
+    outputFile.close()
+
 
 def getFasta(geneName, outputDir, seqType, refseqID):
     """

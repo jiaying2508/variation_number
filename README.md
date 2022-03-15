@@ -16,7 +16,7 @@ In order to run **vn.py**, please install **command line** version for:
 1. Clustal Omega: http://www.clustal.org/omega/
 2. PAUP: http://phylosolutions.com/paup-test/
 
-## Running Instructions
+## Running instructions for installation from source
 Download **vn.py**, and run use python version 3.7.4 or higher
 ```console
 $ python vn.py -g <geneName> -s <sequenceType: nucleotide or protein>
@@ -26,8 +26,29 @@ Example:
 $ python -g BRCA1 -s nucleotide
 ```
 
-## Optional Parameters
+### Optional parameters
 ```
 -o output directory: need to be full path
 -a RefSeq accession
+```
+
+## Running instructions for installation using pip
+variation_number is published on [PyPI](https://pypi.org/). Use the following command to install variation_number using pip:
+```console
+$ pip install variation_number
+```
+
+### Usage
+```
+import variation_number.vn as vn
+import os
+gene = 'BRCA1'
+seqtype =' protein'
+outputDir = '{}/output'.format(os.getcwd())
+
+# Download orthologs from NCBI orthologs database
+acc = vn.getFasta(gene, outputDir,seqtype,refseqID=None)
+
+# Calculate variation numbers
+vn.processVN(gene, outputDir, acc, seqtype)
 ```
