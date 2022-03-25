@@ -24,7 +24,7 @@ $ pip install variation_number
 
 ### Usage
 ```
-import variation_number.vn as vn
+import variation_number as vn
 import os
 gene = 'BRCA1'
 seqtype =' protein'
