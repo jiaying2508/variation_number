@@ -436,6 +436,7 @@ def getFasta(geneName, outputDir, seqType, refseqID):
     page = requests.get('https://www.ncbi.nlm.nih.gov/protein/?term={}'.format(geneName))
     geneID = ''
     homo_acc = ''
+    taxidDict = {}
     if page.status_code == 200:
         soup = BeautifulSoup(page.text, 'html.parser')
         soup.prettify()
@@ -470,6 +471,7 @@ def getFasta(geneName, outputDir, seqType, refseqID):
                                 if refseqID != None:
                                     homo_acc = refseqID
                                     refseqList.append(refseqID)
+                                    taxidDict[homo_acc] = 9606
                                     continue
                                 else:
                                     for item in gene['refseq_accessions']:
@@ -477,18 +479,23 @@ def getFasta(geneName, outputDir, seqType, refseqID):
                                             if seqType == 'nucleotide':
                                                 homo_acc = item['transcript_acc']
                                                 refseqList.append(homo_acc)
+                                                taxidDict[homo_acc] = 9606
                                                 break
                                             else:
                                                 homo_acc = item['protein_acc']
                                                 refseqList.append(homo_acc)
+                                                taxidDict[homo_acc] = 9606
                                                 break
                                         except:
                                             continue
                             else:
                                 try:
+                                    seqAcc = gene['tax_id']
                                     if seqType == 'nucleotide':
+                                        taxidDict[gene['refseq_accessions'][0]['transcript_acc']] = seqAcc
                                         refseqList.append(gene['refseq_accessions'][0]['transcript_acc'])
                                     else:
+                                        taxidDict[gene['refseq_accessions'][0]['protein_acc']] = seqAcc
                                         refseqList.append(gene['refseq_accessions'][0]['protein_acc'])
                                 except:
                                     pass
@@ -511,6 +518,11 @@ def getFasta(geneName, outputDir, seqType, refseqID):
                         continue
                     seq = seq + l
                 outputFile.write('>{}\n{}\n'.format(gene, seq))
+            outputFile.close()
+
+            outputFile = open('{}/taxid.txt'.format(outputDir), 'w')
+            for key in taxidDict.keys():
+                outputFile.write('{}\t{}\n'.format(key, taxidDict[key]))
             outputFile.close()
             return homo_acc
     return ''
