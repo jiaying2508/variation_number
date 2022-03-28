@@ -19,7 +19,7 @@ In order to run **vn.py**, please install **command line** version for:
 ## Running instructions for installation using pip
 variation_number is published on [PyPI](https://pypi.org/). Use the following command to install variation_number using pip:
 ```console
-$ pip install variation_number
+$ pip install variation-number
 ```
 
 ### Usage
