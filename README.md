@@ -44,7 +44,7 @@ $ python vn.py -g <geneName> -s <sequenceType: nucleotide or protein>
 ```
 Example:
 ```console
-$ python -g BRCA1 -s nucleotide
+$ python -g BRCA1 -s protein
 ```
 
 ### Optional parameters
