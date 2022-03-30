@@ -414,7 +414,7 @@ def processVN(file, outputDir, accession_full, seqType):
     outputFile.close()
 
 
-def getFasta(geneName, outputDir, seqType, refseqID):
+def getFasta(geneName, outputDir, seqType, refseqID=None):
     """
 
     Parameters
