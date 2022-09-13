@@ -15,10 +15,10 @@ Lai, J., & Sarkar, I. N. (2021). A Phylogenetic Approach to Analyze the Conserva
 
 ## Required python packages
 Python packages (most of which can be installed using pip) needed to run LYRUS include:
-- skbio: http://scikit-bio.org
-- numpy: https://numpy.org/install/
-- Bio: https://biopython.org/wiki/Download
-- BeautifulSoup: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-beautiful-soup
+- skbio(0.5.6): http://scikit-bio.org
+- numpy(1.22.3): https://numpy.org/install/
+- Bio(1.79): https://biopython.org/wiki/Download
+- BeautifulSoup(4.10.0): https://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-beautiful-soup
 
 ## Required external packages
 In order to run **vn.py**, please install **command line** version for:
@@ -27,7 +27,7 @@ In order to run **vn.py**, please install **command line** version for:
 3. PAUP: http://phylosolutions.com/paup-test/
 
 ## Running instructions for installation using pip
-variation_number is published on [PyPI](https://pypi.org/). Use the following command to install variation_number using pip:
+variation_number(0.2.0) is published on [PyPI](https://pypi.org/). Use the following command to install variation_number using pip:
 ```console
 $ pip install variation-number
 ```
@@ -44,5 +44,5 @@ outputDir = '{}/output'.format(os.getcwd())
 acc = vn.getFasta(gene, outputDir,seqtype,refseqID=None)
 
 # Calculate variation number using clustal omega
-vn.processVN(file=gene, outputDir, accession_full=acc, seqType=seqtype, aligned=False, alignTool='clustal')
+vn.processVN(file='{}/{}'.format(outputDir, gene), outputDir, accession_full=acc, seqType=seqtype, aligned=False, alignTool='clustal')
 ```

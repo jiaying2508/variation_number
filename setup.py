@@ -8,7 +8,7 @@ setup(
     author="Jiaying Lai",
     description="A package for computing variation numbers",
     name="variation_number",
-    version="0.1.9",
+    version="0.2.1",
     packages=find_packages(include=["variation_number","variation_number*"]),
     install_requires=[
         'bio>=0.4.1',

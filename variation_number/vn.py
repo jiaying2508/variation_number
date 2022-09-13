@@ -273,7 +273,7 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
     ################################################################################
     #process homologous protein sequence file
     ################################################################################
-    in_file = open('{}/{}'.format(outputDir, file, 'r'))
+    in_file = open(file)
 
     accession = ''
     sequence = ''
