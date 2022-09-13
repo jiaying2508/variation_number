@@ -325,7 +325,7 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
         ################################################################################
         #                      run cluster omega on the fasta file
         ################################################################################
-        print('# Performing multiple sequence alignment\n')
+        # print('# Performing multiple sequence alignment\n')
         # print('clustalo -i {}/{}.fasta -o {}/{}_aligned.fasta \
         #     --auto -v --force >/dev/null'.format(outputDir, accession_full, outputDir, accession_full))
         
