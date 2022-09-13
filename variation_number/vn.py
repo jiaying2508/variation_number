@@ -44,7 +44,7 @@ def replaceAA(sequence, seqType):
         return sequence
     seq = ''
     for char in sequence:
-        if char in 'ARNDCQEGHILKMFPSTWYV':
+        if char in 'ARNDCQEGHILKMFPSTWYV-':
             seq = seq + char
         else:
             seq = seq + 'X'
@@ -242,32 +242,38 @@ def generateVN(tree, seqDict, seqLength):
                 queue.append(c)
     return variation_number
 
-def processVN(file, outputDir, accession_full, seqType):
+def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=False, alignTool='clustal'):
     """
 
     Parameters
     ----------
-    file : input file
+    file : input file in fasta format
         
     outputDir : output directory
         
-    accession_full : accession number
+    accession_full : accession number; if provided, will output variation number for this sequence without gaps
         
     seqType : nucleotide or protein
-        
+
+    aligned: whether the input file is aligned    
+
+    alignTool: the alignment program to use. clustal: clustalo; mafft: mafft
 
     Returns
     -------
+    vn.txt
+    vn_scaled.txt: scaled using min max normalization
+    vn_{$accession_full}.txt
+    vn_{$accession_full}_scaled.txt: scaled using min max normalization
 
     """
 
+    if accession_full == None:
+        accession_full = '_accession'
     ################################################################################
     #process homologous protein sequence file
     ################################################################################
-    
     in_file = open('{}/{}'.format(outputDir, file, 'r'))
-
-    print('# Generating Variation Number for {}'.format(file))
 
     accession = ''
     sequence = ''
@@ -301,18 +307,36 @@ def processVN(file, outputDir, accession_full, seqType):
     ################################################################################
     #         convert the homologous sequence file into fasta format
     ################################################################################
-    file1 = open('{}/{}.fasta'.format(outputDir, accession_full), 'w')
-    for key in fastaDict.keys():
-        write_fasta(file1, key, fastaDict[key])
-    file1.close()
-    fastaDict.clear()
+    if aligned:
+        file1 = open('{}/_temp.fasta'.format(outputDir), 'w')
+        for key in fastaDict.keys():
+            write_fasta(file1, key, fastaDict[key])
+        file1.close()
 
-    ################################################################################
-    #                      run cluster omega on the fasta file
-    ################################################################################
-    os.system('clustalo -i {}/{}.fasta -o {}/{}_aligned.fasta \
-        --auto -v --force >/dev/null'.format(outputDir, accession_full, outputDir, accession_full))
+        os.system('mv {}/_temp.fasta {}/{}_aligned.fasta'.format(outputDir, outputDir, accession_full))
+        fastaDict.clear()
+    else:
+        file1 = open('{}/{}.fasta'.format(outputDir, accession_full), 'w')
+        for key in fastaDict.keys():
+            write_fasta(file1, key, fastaDict[key])
+        file1.close()
+        fastaDict.clear()
+    
+        ################################################################################
+        #                      run cluster omega on the fasta file
+        ################################################################################
+        print('# Performing multiple sequence alignment\n')
+        # print('clustalo -i {}/{}.fasta -o {}/{}_aligned.fasta \
+        #     --auto -v --force >/dev/null'.format(outputDir, accession_full, outputDir, accession_full))
         
+        if alignTool=='clustal':
+            print('# Performing multiple sequence alignment using CLUSTALO\n')
+            os.system('clustalo -i {}/{}.fasta -o {}/{}_aligned.fasta \
+                --auto -v --force >/dev/null'.format(outputDir, accession_full, outputDir, accession_full))
+        else:
+            print('# Performing multiple sequence alignment using MAFFT\n')
+            os.system('mafft --auto --quiet {}/{}.fasta > {}/{}_aligned.fasta'.format(outputDir, accession_full, outputDir, accession_full))
+    
     ################################################################################
     #  read the aligned fasta file, and clean the identifier
     ################################################################################
@@ -356,6 +380,8 @@ def processVN(file, outputDir, accession_full, seqType):
     ################################################################################
     #                              Generate variation number
     ################################################################################
+    print('# Generating Variation Number for {}'.format(file))
+
     with open('{}/{}_aligned.fasta'.format(outputDir,accession_full)) as f:
         alist = [line.rstrip() for line in f]
     seqDict = {}
@@ -373,12 +399,16 @@ def processVN(file, outputDir, accession_full, seqType):
         else:
             seq = seq + line
     seqDict[accession] = seq
+    seqLength = len(seq)
 
-    homoAccession = accession_full
-    homoAccession = homoAccession.replace('_', '')
-    homoAccession = homoAccession.replace('.', '')
-    homoSeq = seqDict[homoAccession]
-    seqLength = len(homoSeq)
+    if accession_full == '_accession':
+        homoAccession = None
+    else:
+        homoAccession = accession_full
+        homoAccession = homoAccession.replace('_', '')
+        homoAccession = homoAccession.replace('.', '')
+        homoSeq = seqDict[homoAccession]
+        
 
     ################################################################################
     #                       convert phylogenetic tree
@@ -393,28 +423,50 @@ def processVN(file, outputDir, accession_full, seqType):
 
     variation_number = generateVN(tree, seqDict, seqLength)
 
-    homoIndexList = []
-    f_vn = []
-    for i in range(len(homoSeq)):
-        if str(homoSeq[i]) != '-':
-            homoIndexList.append(i)
-            f_vn.append(variation_number[i])
-
-    outputFile = open("{}/vn_{}.txt".format(outputDir,accession_full), 'w')
-
-    vn_max = max(f_vn)
-    vn_min = min(f_vn)
-
-    for i in range(len(homoIndexList)):
+    outputFile = open("{}/vn.txt".format(outputDir), 'w')
+    for i in range(len(variation_number)):
         j = i + 1
-        vn = variation_number[homoIndexList[i]]
-        vn = (vn - vn_min) / (vn_max - vn_min)
-        outputFile.write('{}\t{}\t{}\n'.format(str(j), homoSeq[homoIndexList[i]], str(vn)))
-
+        vn = variation_number[i]
+        outputFile.write('{}\t{}\n'.format(str(j), str(vn)))
     outputFile.close()
 
+    outputFile = open("{}/vn_scaled.txt".format(outputDir), 'w')
+    vn_max = max(variation_number)
+    vn_min = min(variation_number)
+    for i in range(len(variation_number)):
+        j = i + 1
+        vn = variation_number[i]
+        vn = (vn - vn_min) / (vn_max - vn_min)
+        outputFile.write('{}\t{}\n'.format(str(j), str(vn)))
+    outputFile.close()
 
-def getFasta(geneName, outputDir, seqType, refseqID=None):
+    if homoAccession != None:
+        homoIndexList = []
+        f_vn = []
+        for i in range(len(homoSeq)):
+            if str(homoSeq[i]) != '-':
+                homoIndexList.append(i)
+                f_vn.append(variation_number[i])
+
+        outputFile = open("{}/vn_{}.txt".format(outputDir,accession_full), 'w')
+        for i in range(len(homoIndexList)):
+            j = i + 1
+            vn = variation_number[homoIndexList[i]]
+            outputFile.write('{}\t{}\t{}\n'.format(str(j), homoSeq[homoIndexList[i]], str(vn)))
+        outputFile.close()
+    
+        outputFile = open("{}/vn_{}_scaled.txt".format(outputDir,accession_full), 'w')
+        vn_max = max(f_vn)
+        vn_min = min(f_vn)
+        for i in range(len(homoIndexList)):
+            j = i + 1
+            # vn = variation_number[homoIndexList[i]]
+            vn = f_vn[i]
+            vn = (vn - vn_min) / (vn_max - vn_min)
+            outputFile.write('{}\t{}\t{}\n'.format(str(j), homoSeq[homoIndexList[i]], str(vn)))
+        outputFile.close()
+
+def getFasta(geneName, outputDir, seqType, refseqID=None, email=''):
     """
 
     Parameters
@@ -432,6 +484,7 @@ def getFasta(geneName, outputDir, seqType, refseqID=None):
     -------
     accession number for homo sapiens
     """
+    Entrez.email = email
     print('\n# process {} refseq'.format(geneName))
     page = requests.get('https://www.ncbi.nlm.nih.gov/protein/?term={}'.format(geneName))
     geneID = ''
@@ -526,37 +579,3 @@ def getFasta(geneName, outputDir, seqType, refseqID=None):
             outputFile.close()
             return homo_acc
     return ''
-
-
-parser = argparse.ArgumentParser(description='Calculation for the Variation Number')
-parser.add_argument('-g', '--gene', type=str, metavar='', required=True, help='Gene Name')
-parser.add_argument('-o', '--outputDir', type=str, metavar='', help='Output Directory; full path')
-parser.add_argument('-s', '--seqType', type=str, metavar='', required=True, help='sequence type, protein or nucleotide')
-parser.add_argument('-a', '--acc', type=str, metavar='', help='refseq accession')
-
-args = parser.parse_args()
-
-if __name__ == '__main__':
-    if args.outputDir == None:
-        args.outputDir = os.getcwd()
-    else:
-        try:
-            os.mkdir(args.outputDir)
-        except:
-            pass
-    seqType = args.seqType.lower()
-    if seqType != 'protein' and seqType != 'nucleotide':
-        print('Please specify is the sequence type is protein or nucleotide')
-        exit()
-    ################################################################################
-    '''
-    download orthologs file
-    '''
-    ################################################################################
-    Entrez.email = ''
-
-    acc = getFasta(args.gene, args.outputDir, seqType, args.acc)
-    if len(acc) == 0:
-        print('Orthologs information for {} is not available'.format(args.gene))
-    else:
-        processVN(args.gene, args.outputDir, acc, seqType)
