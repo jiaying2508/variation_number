@@ -247,7 +247,7 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
 
     Parameters
     ----------
-    file : input file in fasta format
+    file : input file in fasta format (full path)
         
     outputDir : output directory
         
