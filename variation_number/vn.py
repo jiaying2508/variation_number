@@ -276,8 +276,11 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
     in_file = open(file)
 
     accession = ''
+    accession1 = ''
     sequence = ''
     fastaDict = {}
+    accessionCount = 1
+    accessionDict = {}
     for line in in_file:
         line = line.rstrip()
         if len(line) == 0:
@@ -285,24 +288,28 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
 
         if '>' in line:
             #if the first accession, initiate
-            if accession == '':
-                accession = re.search('>([A-Za-z0-9_]+.[0-9]+)', line)
-                accession = accession.group(0)[1:]
-                continue
+            if accession != '':
+                #store accession-sequence pair in fastaDict
+                sequence = replaceAA(sequence, seqType)
+                fastaDict[accession1] = sequence
+                sequence = ''
 
-            #store accession-sequence pair in fastaDict
-            sequence = replaceAA(sequence, seqType)
-            fastaDict[accession] = sequence
-            sequence = ''
-            accession = re.search('>([A-Za-z0-9_]+.[0-9]+)', line)
-            accession = accession.group(0)[1:]
+            accession = line[1:]
+            accession1 = 's' + str(accessionCount)
+            accessionDict[accession1] = accession
+            accessionCount += 1
 
         else:
             sequence = sequence + line
 
     sequence = replaceAA(sequence, seqType)
-    fastaDict[accession] = sequence
+    fastaDict[accession1] = sequence
     in_file.close()
+
+    outputFile = open('{}/accession.txt'.format(outputDir), 'w')
+    for key in accessionDict.keys():
+        outputFile.write('{}\t{}\n'.format(key, accessionDict[key]))
+    outputFile.close()
 
     ################################################################################
     #         convert the homologous sequence file into fasta format
@@ -355,8 +362,6 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
                 seqDict[accession] = seq
                 seq = ''
 
-            accession = line.replace('_', '')
-            accession = accession.replace('.', '')
             accession = accession.replace('>', '')
 
         else:
