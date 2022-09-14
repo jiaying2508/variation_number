@@ -71,7 +71,7 @@ def write_fasta(file, accession, sequence):
     """
     file.write('>{}\n'.format(accession))
     if len(sequence) <= 70:
-        file.write('>{}\n'.format(sequence))
+        file.write('{}\n'.format(sequence))
     else:
         line_num_exact = len(sequence) / 70
         line_num = math.floor(line_num_exact)
@@ -332,7 +332,7 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
             write_fasta(file1, key, fastaDict[key])
         file1.close()
         fastaDict.clear()
-    
+
         ################################################################################
         #                      run cluster omega on the fasta file
         ################################################################################
