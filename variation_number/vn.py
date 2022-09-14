@@ -281,6 +281,7 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
     fastaDict = {}
     accessionCount = 1
     accessionDict = {}
+    homoAccession = ''
     for line in in_file:
         line = line.rstrip()
         if len(line) == 0:
@@ -297,6 +298,9 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
             accession = line[1:]
             accession1 = 's' + str(accessionCount)
             accessionDict[accession1] = accession
+
+            if accession == accession_full:
+                homoAccession = accession1
             accessionCount += 1
 
         else:
@@ -361,9 +365,7 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
             if len(accession) > 0:
                 seqDict[accession] = seq
                 seq = ''
-
-            accession = accession.replace('>', '')
-
+            accession = line[1:]
         else:
             seq = seq + line
 
@@ -409,9 +411,6 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
     if accession_full == '_accession':
         homoAccession = None
     else:
-        homoAccession = accession_full
-        homoAccession = homoAccession.replace('_', '')
-        homoAccession = homoAccession.replace('.', '')
         homoSeq = seqDict[homoAccession]
         
 
