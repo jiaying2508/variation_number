@@ -225,6 +225,8 @@ def generateVN(tree, seqDict, seqLength):
     -------
     calculated variation number
     """
+    print('# Generating Variation Number ')
+
     variation_number = np.zeros((seqLength,), dtype=int)
     queue = []
     queue.append(tree)
@@ -242,7 +244,7 @@ def generateVN(tree, seqDict, seqLength):
                 queue.append(c)
     return variation_number
 
-def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=False, alignTool='clustal'):
+def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=False, alignTool='clustal', treeTool='paup'):
     """
 
     Parameters
@@ -258,6 +260,8 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
     aligned: whether the input file is aligned    
 
     alignTool: the alignment program to use. clustal: clustalo; mafft: mafft
+
+    treeTool: tool to generate phylogenetic tree; paup or fasttree
 
     Returns
     -------
@@ -372,23 +376,30 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
     seqDict[accession] = seq
     file1.close()
 
-    ################################################################################
-    #                      convert fasta to nexus file
-    ################################################################################
-    nexusFile = '{}/{}.nex'.format(outputDir, accession_full)
-    writeNexus(nexusFile, seqDict, seqType)
+    if treeTool.lower() == 'paup':
+        print('# Generating phylogenetic tree using paup')
+        ################################################################################
+        #                      convert fasta to nexus file
+        ################################################################################
+        nexusFile = '{}/{}.nex'.format(outputDir, accession_full)
+        writeNexus(nexusFile, seqDict, seqType)
 
-    ################################################################################
-    #                                   run paup
-    ################################################################################
-    getTreeCMD(nexusFile, '{}/{}_getTree.cmd'.format(outputDir, accession_full))
-    os.system('paup {}/{}_getTree.cmd >/dev/null'.format(outputDir, accession_full))
+        ################################################################################
+        #                                   run paup
+        ################################################################################
+        getTreeCMD(nexusFile, '{}/{}_getTree.cmd'.format(outputDir, accession_full))
+        os.system('paup {}/{}_getTree.cmd >/dev/null'.format(outputDir, accession_full))
+    else:
+        print('# Generating phylogenetic tree using FastTree')
+
+        if seqType.lower() == 'protein':
+            os.system('FastTree -quiet {}/{}_aligned.fasta > {}/{}_tree.tree'.format(outputDir, accession_full, outputDir, accession_full))
+        else:
+            os.system('FastTree -quiet -nt {}/{}_aligned.fasta > {}/{}_tree.tree'.format(outputDir, accession_full, outputDir, accession_full))
 
     ################################################################################
     #                              Generate variation number
     ################################################################################
-    print('# Generating Variation Number for {}'.format(file))
-
     with open('{}/{}_aligned.fasta'.format(outputDir,accession_full)) as f:
         alist = [line.rstrip() for line in f]
     seqDict = {}
@@ -417,7 +428,8 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
     ################################################################################
     #                       convert phylogenetic tree
     ################################################################################
-    Phylo.convert('{}/{}_trees.nex'.format(outputDir, accession_full), 'nexus', '{}/{}_tree.tree'.format(outputDir, accession_full), 'newick')
+    if treeTool.lower == 'paup':
+        Phylo.convert('{}/{}_trees.nex'.format(outputDir, accession_full), 'nexus', '{}/{}_tree.tree'.format(outputDir, accession_full), 'newick')
 
     f = open('{}/{}_tree.tree'.format(outputDir, accession_full), 'r')
     tree = f.readline()
