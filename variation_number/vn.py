@@ -244,7 +244,7 @@ def generateVN(tree, seqDict, seqLength):
                 queue.append(c)
     return variation_number
 
-def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=False, alignTool='clustal', treeTool='paup'):
+def processVN(file, outputDir, reindex=False, accession_full=None, seqType='protein', aligned=False, alignTool='clustal', treeTool='paup'):
     """
 
     Parameters
@@ -253,6 +253,8 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
         
     outputDir : output directory
         
+    reindex: whether to reset the fasta identifier
+
     accession_full : accession number; if provided, will output variation number for this sequence without gaps
         
     seqType : nucleotide or protein
@@ -279,45 +281,70 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
     ################################################################################
     in_file = open(file)
 
-    accession = ''
-    accession1 = ''
-    sequence = ''
     fastaDict = {}
-    accessionCount = 1
-    accessionDict = {}
     homoAccession = ''
-    for line in in_file:
-        line = line.rstrip()
-        if len(line) == 0:
-            continue
+    if reindex:
+        accession = ''
+        accession1 = ''
+        sequence = ''
+        accessionCount = 1
+        accessionDict = {}
+        for line in in_file:
+            line = line.rstrip()
+            if len(line) == 0:
+                continue
 
-        if '>' in line:
-            #if the first accession, initiate
-            if accession != '':
-                #store accession-sequence pair in fastaDict
-                sequence = replaceAA(sequence, seqType)
-                fastaDict[accession1] = sequence
-                sequence = ''
+            if '>' in line:
+                #if the first accession, initiate
+                if accession != '':
+                    #store accession-sequence pair in fastaDict
+                    sequence = replaceAA(sequence, seqType)
+                    fastaDict[accession1] = sequence
+                    sequence = ''
 
-            accession = line[1:]
-            accession1 = 's' + str(accessionCount)
-            accessionDict[accession1] = accession
+                accession = line[1:]
+                accession1 = 's' + str(accessionCount)
+                accessionDict[accession1] = accession
 
-            if accession == accession_full:
-                homoAccession = accession1
-            accessionCount += 1
+                if accession == accession_full:
+                    homoAccession = accession1
+                accessionCount += 1
 
-        else:
-            sequence = sequence + line
+            else:
+                sequence = sequence + line
 
-    sequence = replaceAA(sequence, seqType)
-    fastaDict[accession1] = sequence
+        sequence = replaceAA(sequence, seqType)
+        fastaDict[accession1] = sequence
+        
+        outputFile = open('{}/accession.txt'.format(outputDir), 'w')
+        for key in accessionDict.keys():
+            outputFile.write('{}\t{}\n'.format(key, accessionDict[key]))
+        outputFile.close()
+    else:
+        accession = ''
+        sequence = ''
+        for line in in_file:
+            line = line.rstrip()
+            if len(line) == 0:
+                continue
+
+            if '>' in line:
+                #if the first accession, initiate
+                if accession != '':
+                    #store accession-sequence pair in fastaDict
+                    sequence = replaceAA(sequence, seqType)
+                    fastaDict[accession] = sequence
+                    sequence = ''
+
+                accession = line[1:]
+                if accession == accession_full:
+                    homoAccession = accession
+            else:
+                sequence = sequence + line
+
+        sequence = replaceAA(sequence, seqType)
+        fastaDict[accession] = sequence
     in_file.close()
-
-    outputFile = open('{}/accession.txt'.format(outputDir), 'w')
-    for key in accessionDict.keys():
-        outputFile.write('{}\t{}\n'.format(key, accessionDict[key]))
-    outputFile.close()
 
     ################################################################################
     #         convert the homologous sequence file into fasta format
@@ -345,11 +372,11 @@ def processVN(file, outputDir, accession_full=None, seqType='protein', aligned=F
         #     --auto -v --force >/dev/null'.format(outputDir, accession_full, outputDir, accession_full))
         
         if alignTool=='clustal':
-            print('# Performing multiple sequence alignment using CLUSTALO\n')
+            print('# Performing multiple sequence alignment using CLUSTALO')
             os.system('clustalo -i {}/{}.fasta -o {}/{}_aligned.fasta \
                 --auto -v --force >/dev/null'.format(outputDir, accession_full, outputDir, accession_full))
         else:
-            print('# Performing multiple sequence alignment using MAFFT\n')
+            print('# Performing multiple sequence alignment using MAFFT')
             os.system('mafft --auto --quiet {}/{}.fasta > {}/{}_aligned.fasta'.format(outputDir, accession_full, outputDir, accession_full))
     
     ################################################################################
