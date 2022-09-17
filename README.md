@@ -25,9 +25,10 @@ In order to run **vn.py**, please install **command line** version for:
 1. Clustal Omega: http://www.clustal.org/omega/
 2. Mafft: https://mafft.cbrc.jp/alignment/software/
 3. PAUP: http://phylosolutions.com/paup-test/
+3. FastTree: http://www.microbesonline.org/fasttree/
 
 ## Running instructions for installation using pip
-variation_number(0.2.1) is published on [PyPI](https://pypi.org/). Use the following command to install variation_number using pip:
+variation_number(0.2.3) is published on [PyPI](https://pypi.org/). Use the following command to install variation_number using pip:
 ```console
 $ pip install variation-number
 ```
@@ -44,5 +45,5 @@ outputDir = '{}/output'.format(os.getcwd())
 acc = vn.getFasta(gene, outputDir,seqtype,refseqID=None)
 
 # Calculate variation number using clustal omega
-vn.processVN(file='{}/{}'.format(outputDir, gene), outputDir, accession_full=acc, seqType=seqtype, aligned=False, alignTool='clustal')
+vn.processVN(file='{}/{}'.format(outputDir, gene), outputDir, accession_full=acc, seqType=seqtype, aligned=False, alignTool='clustal', treeTool='paup')
 ```
