@@ -21,12 +21,11 @@ import json
 from bs4 import BeautifulSoup
 import requests
 import time
+import pandas as pd
+import time
 
-'''
-replace the amino acid with X if it is not among the 20 amino acid codes
-'''
 def replaceAA(sequence, seqType):
-    """
+    """replace the amino acid with X if it is not among the 20 amino acid codes
 
     Parameters
     ----------
@@ -50,11 +49,8 @@ def replaceAA(sequence, seqType):
             seq = seq + 'X'
     return seq
 
-'''
-write a sequence to fasta file
-'''
 def write_fasta(file, accession, sequence):
-    """
+    """write a sequence to fasta file
 
     Parameters
     ----------
@@ -166,10 +162,10 @@ def getTreeCMD(nexusFileName, outputFile):
     createTreeCmdFile.write('quit warnTsave=no;\n')
     createTreeCmdFile.close()
 
-'''
-functions to calculate variation number
-'''
 def findSet(l, i, seqDict):
+    '''
+    functions to calculate variation number
+    '''
     ll = []
     for j in l:
         ll.append(str(seqDict[j][i]))
@@ -196,7 +192,6 @@ def updateVN(node, child, variation_number, seqDict, length):
     -------
     variation_number(np.array)
     """
-
     allClades = re.findall(r'[a-zA-Z0-9]+', str(node))
     for c in child:
         cClades = re.findall(r'[a-zA-Z0-9]+', str(c))
@@ -238,8 +233,34 @@ def generateVN(tree, seqDict, seqLength):
         else:
             child = node.children
             variation_number = updateVN(node, child, variation_number, seqDict, seqLength)
-            #print('variation')
-            #print(variation_number)
+            for c in child:
+                queue.append(c)
+    return variation_number
+
+def calculateVN(tree, seqDF, seqLength):
+    """calculate variation number using dataframe
+    """
+    variation_number = np.zeros((seqLength,), dtype=int)
+    queue = []
+    queue.append(tree)
+    while len(queue) > 0:
+        node = queue.pop()
+        if node.is_tip():
+            continue
+        else:
+            allClades = re.findall(r'[a-zA-Z0-9]+', str(node))
+            child = node.children
+            for c in child:
+                cClades = re.findall(r'[a-zA-Z0-9]+', str(c))
+                subClades = list(set(allClades) - set(cClades))
+
+                for i in range(seqLength):
+                    row = seqDF.iloc[[i]]
+                    row1 = list(set(row[cClades].iloc[0].tolist()))
+                    row2 = list(set(row[subClades].iloc[0].tolist()))
+                    for item in row1:
+                        if item not in row2:
+                            variation_number[i] = variation_number[i] + 1
             for c in child:
                 queue.append(c)
     return variation_number
@@ -436,22 +457,21 @@ def processVN(file, outputDir, reindex=False, accession_full=None, seqType='prot
     for line in alist:
         if '>' in line:
             if accession != '':
-                seqDict[accession] = seq
+                seqDict[accession] = [char for char in seq]
             accession = line.replace('>', '')
             accession = accession.replace('_', '')
             accession = accession.replace('.', '')
             seq = ''
         else:
             seq = seq + line
-    seqDict[accession] = seq
+    seqDict[accession] = [char for char in seq]
     seqLength = len(seq)
 
     if accession_full == '_accession':
         homoAccession = None
     else:
         homoSeq = seqDict[homoAccession]
-        
-
+    
     ################################################################################
     #                       convert phylogenetic tree
     ################################################################################
@@ -461,10 +481,18 @@ def processVN(file, outputDir, reindex=False, accession_full=None, seqType='prot
     f = open('{}/{}_tree.tree'.format(outputDir, accession_full), 'r')
     tree = f.readline()
 
-    tree = re.sub(r':\d.\d+', '', tree)
+    tree = re.sub(r'((\d\.\d+)?:\d.\d+)', '', tree)
     tree = TreeNode.read(StringIO(tree))
 
+    time1 = time.time()
     variation_number = generateVN(tree, seqDict, seqLength)
+    time2 = time.time()
+    print('# Time elapsed for calculating variation number: {:.5f} seconds'.format(time2-time1))
+
+    # time1 = time.time()
+    # seqDF = pd.DataFrame.from_dict(seqDict)
+    # variation_number1 = calculateVN(tree, seqDF, seqLength)
+    # time2 = time.time()
 
     outputFile = open("{}/vn.txt".format(outputDir), 'w')
     for i in range(len(variation_number)):
