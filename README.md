@@ -28,7 +28,7 @@ In order to run **vn.py**, please install **command line** version for:
 3. FastTree: http://www.microbesonline.org/fasttree/
 
 ## Running instructions for installation using pip
-variation_number(0.2.4) is published on [PyPI](https://pypi.org/). Use the following command to install variation_number using pip:
+variation_number(0.2.5) is published on [PyPI](https://pypi.org/). Use the following command to install variation_number using pip:
 ```console
 $ pip install variation-number
 ```
